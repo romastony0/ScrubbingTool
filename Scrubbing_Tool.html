@@ -70,19 +70,12 @@
       function convert() {
         const fileInput = document.getElementById("fileInput");
 
-        // Check if a file has already been selected and stored in sessionStorage
-        if (sessionStorage.getItem("selectedFile")) {
-          const selectedFile = sessionStorage.getItem("selectedFile");
-          const fileName = document.createElement("span");
-          fileName.textContent = selectedFile;
-          fileInput.parentNode.insertBefore(fileName, fileInput.nextSibling);
-        }
         // Display alert message if no file has been selected
         if (fileInput.files.length === 0) {
           alert("Please Select File");
           return;
         }
-        // const fileInput = document.getElementById("fileInput");
+
         const file = fileInput.files[0];
         const reader = new FileReader();
         const planToFile = {
@@ -131,6 +124,14 @@
             return acc;
           }, {});
           const zip = new JSZip();
+
+          const allMobileNumbers = Object.values(mobile_numbers_by_plan)
+            .flat()
+            .filter((number) => /^\d+$/.test(number))
+            .join("\n");
+
+          zip.file("BASE.txt", allMobileNumbers);
+
           for (const plan in mobile_numbers_by_plan) {
             const mobile_numbers = mobile_numbers_by_plan[plan];
             const count = mobile_numbers.length;
@@ -139,6 +140,7 @@
             const file_content = mobile_numbers.filter((number) => /^\d+$/.test(number)).join("\n");
             zip.file(file_name, file_content);
           }
+
           zip.generateAsync({ type: "blob" }).then((content) => {
             const table = document.createElement("table");
             table.classList.add("table", "table-hover");
@@ -165,9 +167,11 @@
 
             const today = new Date();
             const dateString = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
-            saveAs(content, `mobile_numbers_${dateString}.zip`);
+            saveAs(content, `${dateString}.zip`);
+            window.location.href = "http://3.7.168.11:4747/gateway/action?application=member&action=initiate";
           });
         };
+
         reader.readAsArrayBuffer(file);
       }
     </script>
